@@ -1,0 +1,50 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Poppins';
+    background-color: #2c3531;
+}
+h1 {
+    color: #D9B08C;
+    font-size: 4;
+    text-align: center;
+  }
+
+  /* Custom scrollbar for the whole page */
+body::-webkit-scrollbar {
+    width: 12px; /* Width of the scrollbar */
+}
+
+body::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Track color */
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #888; /* Thumb color */
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Thumb color when hovered */
+}
+
+/* Custom scrollbar for elements with the class 'scrollable-content' */
+.scrollable-content {
+    height: 400px; /* Fixed height */
+    overflow-y: scroll; /* Enable vertical scrolling */
+}
+
+.scrollable-content::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+    background: #ddd; /* Track color */
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+    background: #666; /* Thumb color */
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: #444; /* Thumb color when hovered */
+}
