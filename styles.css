@@ -29,7 +29,7 @@ body::-webkit-scrollbar-thumb:hover {
 
 /* Custom scrollbar for elements with the class 'scrollable-content' */
 .scrollable-content {
-    height: 400px; /* Fixed height */
+    height: 550px; /* Fixed height */
     overflow-y: scroll; /* Enable vertical scrolling */
 }
 
