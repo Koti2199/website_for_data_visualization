@@ -10,6 +10,12 @@ h1 {
     text-align: center;
   }
 
+  h2{
+    color: #D9B08C;
+    text-align: center;
+    font-family: 'Poppins';
+
+  }
   /* Custom scrollbar for the whole page */
 body::-webkit-scrollbar {
     width: 12px; /* Width of the scrollbar */
@@ -29,7 +35,7 @@ body::-webkit-scrollbar-thumb:hover {
 
 /* Custom scrollbar for elements with the class 'scrollable-content' */
 .scrollable-content {
-    height: 700px; /* Fixed height */
+    height: 580px; /* Fixed height */
     overflow-y: scroll; /* Enable vertical scrolling */
 }
 
