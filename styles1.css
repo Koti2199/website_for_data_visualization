@@ -17,7 +17,11 @@ body {
     /* Setting background color for h1 */
     background-color: #daad86;
   }
-  
+  h2{
+    text-align: center;
+    font-family: 'Poppins';
+    color: #D9B08C;
+  }
   /* CSS for links */
   .links line {
     /* Setting stroke color for links */

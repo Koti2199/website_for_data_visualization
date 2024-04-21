@@ -2,26 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Visualization website</title>
+    <title> Visualization website</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link rel="stylesheet" href="styles1.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    
     <style>
-        .tooltip {
-            position: absolute;
-            text-align: center;
-            width: 120px;
-            height: 28px;
-            padding: 2px;
-            font: 12px Poppins, sans-serif;
-            background: lightsteelblue;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+       
         svg {
             margin: 20px;
             border: 1px solid #ccc;
@@ -32,481 +18,217 @@
     </style>
 </head>
 <body>
-    <h1>Visualizations of Dataset</h1>
-    <h1><a href="index.html">Click Here For Tableau Dashboard</a></h1>
-    <h2>Network Graph</h2>
-    <svg id="network" width="1200" height="600"></svg>
-    
-    <h2>Correlation Heatmap</h2>
-    <div id="heatmap" class="heatmap"></div>
-    
-    <h2>Tree Graph</h2>
-    
-    
-    <div class="tooltip"></div>
+  <h2><a href="index.html" >Click here for tableau dashboard</a></h2>
+  <h2><a href="index2.html" >Click here for d3.js visualizations for graph 3,graph 4</a></h2>
+  <h3>
+    Overview Of Sleep Disorders Across Different
+    Occupations
+  </h3>
+  <!-- SVG container for the tree graph -->
+  <svg width="1100" height="800"></svg>
+  <!-- JavaScript library for data visualization (D3.js) -->
+  <h3>Correlation Heatmap</h3>
+  <div id="heatmap" class="heatmap"></div>
 
+  
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  
+  <div
+  class="tooltip"
+  style="
+    position: absolute;
+    opacity: 0;
+    background: lightpink;
+    padding: 5px;
+    border-radius: 5px;
+    pointer-events: none;
+  "
+></div>
     <script>
-        const tooltip = d3.select('.tooltip');
+     const dataUrl =
+        'https://gist.githubusercontent.com/Koti2199/3bc3e1ac37db0586f04c04e938378da4/raw/ce50ed006d7a3002fd202adc4e5433cf9273f2e7/Sleep_health_and_lifestyle_dataset_aasignment.csv';
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const url = 'https://gist.githubusercontent.com/Koti2199/3bc3e1ac37db0586f04c04e938378da4/raw/ce50ed006d7a3002fd202adc4e5433cf9273f2e7/Sleep_health_and_lifestyle_dataset_aasignment.csv';
-            d3.csv(url).then(data => {
-                drawNetworkGraph(data);
-                drawTreeGraph(data);
-                drawHeatmap(data);
-            });
-        });
+      // Fetching and processing data
+      d3.csv(dataUrl).then(function (data) {
+        let hierarchyData = transformData(data);
+        generateTreeGraph(hierarchyData);
+      });
 
-        function drawNetworkGraph(data) {
-            // Placeholder function for Network Graph
-            const svg = d3.select('svg'), // Selecting the SVG element
-        width = +svg.attr('width'), // Extracting SVG width
-        height = +svg.attr('height'), // Extracting SVG height
-        margin = {
-          top: 20,
-          right: 20,
-          bottom: 20,
-          left: 20,
-        }, // Setting margins
-        effectiveWidth = width - margin.left - margin.right, // Calculating effective width
-        effectiveHeight =
-          height - margin.top - margin.bottom, // Calculating effective height
-        radius = 10, // Radius of nodes
-        colorMapping = {
-          Person: '#4285F4',
-          Occupation: '#EA4335',
-          'Sleep Disorder': '#FBBC05',
-        }; // Mapping colors to node groups
+      // Function to transform raw data into hierarchical structure
+      function transformData(data) {
+        // Initial root node
+        let root = {
+          name: 'Sleep Disorders',
+          children: [],
+        };
+        let disorderMap = {};
 
-      const simulation = d3 // Setting up force simulation
-        .forceSimulation()
-        .force(
-          'link',
-          d3
-            .forceLink()
-            .id((d) => d.id)
-            .distance(100),
-        )
-        .force('charge', d3.forceManyBody().strength(-400))
-        .force('x', d3.forceX(width / 2))
-        .force('y', d3.forceY(height / 2));
-
-      function processData(data) {
-        // Function to process data and render nodes and links
-        const nodes = [], // Array to hold node data
-          links = []; // Array to hold link data
-        const uniqueAttributes = new Set(); // Set to track unique attributes
-
-        data.slice(0, 20).forEach((row) => {
-          // Iterating over data
-          const personId = `Person ${row['Person ID']}`; // Creating unique ID for person
-          if (!uniqueAttributes.has(personId)) {
-            // Checking uniqueness
-            nodes.push({ id: personId, group: 'Person' }); // Adding person node
-            uniqueAttributes.add(personId); // Updating uniqueness tracker
+        // Processing each data entry
+        data.forEach((d) => {
+          // Creating a new disorder node if it doesn't exist
+          if (!disorderMap[d['Sleep Disorder']]) {
+            disorderMap[d['Sleep Disorder']] = {
+              name: d['Sleep Disorder'],
+              children: [],
+            };
+            root.children.push(
+              disorderMap[d['Sleep Disorder']],
+            );
           }
-
-          ['Occupation', 'Sleep Disorder'].forEach(
-            (attr) => {
-              // Iterating over attributes
-              const attrValue = row[attr]; // Getting attribute value
-              const attrId = `${attr}: ${attrValue}`; // Creating unique ID for attribute
-              if (!uniqueAttributes.has(attrId)) {
-                // Checking uniqueness
-                nodes.push({ id: attrId, group: attr }); // Adding attribute node
-                uniqueAttributes.add(attrId); // Updating uniqueness tracker
-              }
-              links.push({
-                // Adding link between person and attribute
-                source: personId,
-                target: attrId,
-              });
-            },
+          // Finding occupation node under respective disorder node
+          let occupation = disorderMap[
+            d['Sleep Disorder']
+          ].children.find(
+            (occ) => occ.name === d.Occupation,
           );
+          // Creating new occupation node if it doesn't exist
+          if (!occupation) {
+            occupation = { name: d.Occupation, value: 1 };
+            disorderMap[d['Sleep Disorder']].children.push(
+              occupation,
+            );
+          } else {
+            occupation.value++;
+          }
         });
 
-        // Setting up simulation with nodes and links
-        simulation.nodes(nodes).on('tick', ticked);
-        simulation.force('link').links(links);
+        return root;
+      }
 
-        // Rendering links
-        const link = svg
-          .append('g')
-          .attr('class', 'links')
-          .selectAll('line')
-          .data(links)
-          .enter()
-          .append('line');
+      // Function to generate the tree graph using D3.js
+      function generateTreeGraph(data) {
+        var width = 1100,
+          height = 800;
+        // Creating SVG container
+        var svg = d3
+            .select('svg')
+            .attr('width', width)
+            .attr('height', height),
+          g = svg
+            .append('g')
+            .attr('transform', 'translate(60,40)');
 
-        // Rendering nodes
-        const node = svg
-          .append('g')
-          .attr('class', 'nodes')
-          .selectAll('g')
-          .data(nodes)
+        // Setting up D3 tree layout
+        var tree = d3
+          .tree()
+          .size([height - 100, width - 300]);
+        var root = d3.hierarchy(data);
+        tree(root);
+
+        // Array of symbols for different node types
+        const symbols = [
+          d3.symbolCircle,
+          d3.symbolSquare,
+          d3.symbolTriangle,
+        ];
+
+        // Adding links between nodes
+        g.selectAll('.link')
+          .data(root.links())
           .enter()
-          .append('g')
-          .call(
+          .append('path')
+          .attr('class', 'link')
+          .attr(
+            'd',
             d3
-              .drag()
-              .on('start', dragstarted)
-              .on('drag', dragged)
-              .on('end', dragended),
+              .linkHorizontal()
+              .x((d) => d.y + 50)
+              .y((d) => d.x),
           );
 
-        // Adding circle to represent nodes
-        node
-          .append('circle')
-          .attr('r', radius)
+        // Adding nodes
+        var node = g
+          .selectAll('.node')
+          .data(root.descendants())
+          .enter()
+          .append('g')
+          .attr('class', 'node')
           .attr(
-            'fill',
-            (d) => colorMapping[d.group] || 'gray',
-          ); // Coloring nodes
+            'transform',
+            (d) => `translate(${d.y + 50},${d.x})`,
+          );
+
+        // Adding symbols to nodes
+        node
+          .append('path')
+          .attr('d', (d) =>
+            d3
+              .symbol()
+              .type(symbols[d.depth % symbols.length])(),
+          )
+          .attr('fill', (d) =>
+            d.depth === 0
+              ? '#555'
+              : d.depth === 1
+                ? 'steelblue'
+                : '#999',
+          );
 
         // Adding text labels to nodes
         node
           .append('text')
-          .text((d) => d.id)
-          .attr('x', 12)
-          .attr('y', '.31em');
-
-        // Adding tooltip for nodes
-        node.append('title').text((d) => d.id);
-      }
-
-      function dragstarted(event, d) {
-        // Function to handle drag start event
-        if (!event.active)
-          simulation.alphaTarget(0.3).restart(); // Restarting simulation
-        d.fx = d.x; // Fixing node position
-        d.fy = d.y;
-      }
-
-      function dragged(event, d) {
-        // Function to handle drag event
-        d.fx = event.x; // Updating fixed position
-        d.fy = event.y;
-      }
-
-      function dragended(event, d) {
-        // Function to handle drag end event
-        if (!event.active) simulation.alphaTarget(0); // Stopping simulation
-        d.fx = null; // Releasing fixed position
-        d.fy = null;
-      }
-
-      function ticked() {
-        // Function to update node and link positions during simulation
-        svg
-          .selectAll('.nodes g')
-          .attr(
-            'transform',
+          .text(
             (d) =>
-              `translate(${(d.x = Math.max(
-                radius,
-                Math.min(effectiveWidth - radius, d.x),
-              ))},${(d.y = Math.max(
-                radius,
-                Math.min(effectiveHeight - radius, d.y),
-              ))})`,
-          ); // Updating node positions
+              d.data.name +
+              (d.data.value ? ` (${d.data.value})` : ''),
+          );
 
-        svg
-          .selectAll('.links line')
-          .attr('x1', (d) => d.source.x)
-          .attr('y1', (d) => d.source.y)
-          .attr('x2', (d) => d.target.x)
-          .attr('y2', (d) => d.target.y); // Updating link positions
+        // Adding a legend
+        const legendData = [
+          {
+            symbol: d3.symbolCircle,
+            label: 'Sleep Disorders',
+            color: '#555',
+          },
+          {
+            symbol: d3.symbolSquare,
+            label: 'Sleep Disorder Subcategories',
+            color: 'steelblue',
+          },
+          {
+            symbol: d3.symbolTriangle,
+            label: 'Occupation',
+            color: '#999',
+          },
+        ];
+
+        const legend = svg
+          .append('g')
+          .attr('class', 'legend')
+          .attr('transform', `translate(${130}, 10)`);
+
+        // Adding legend items
+        legendData.forEach((item, index) => {
+          const legendItem = legend
+            .append('g')
+            .attr(
+              'transform',
+              `translate(0, ${index * 30})`,
+            );
+
+          legendItem
+            .append('path')
+            .attr('d', d3.symbol().type(item.symbol))
+            .attr('transform', `translate(0, -4)`) // Adjust symbol position
+            .attr('fill', item.color);
+
+          legendItem
+            .append('text')
+            .attr('x', 20)
+            .attr('y', 0)
+            .text(item.label)
+            .style('font-family', 'Reddit Mono')
+            .style('font-size', '14px');
+        });
       }
-
-      // Loading data and triggering visualization
-      d3.csv(
-        'https://gist.githubusercontent.com/Koti2199/3bc3e1ac37db0586f04c04e938378da4/raw/ce50ed006d7a3002fd202adc4e5433cf9273f2e7/Sleep_health_and_lifestyle_dataset_aasignment.csv',
-      ).then(processData);
-        }
-
-        function drawTreeGraph(data) {
-            // Placeholder function for Tree Graph
-            function csvToHierarchy(csvData) {
-                let root = {
-                  name: 'BMI Categories',
-                  children: [],
-                };
-        
-                let bmiCategories = {};
-        
-                csvData.forEach((row) => {
-                  if (!bmiCategories[row['BMI Category']]) {
-                    bmiCategories[row['BMI Category']] = {
-                      name: row['BMI Category'],
-                      children: [],
-                    };
-                    root.children.push(
-                      bmiCategories[row['BMI Category']],
-                    );
-                  }
-                  let occupationFound = bmiCategories[
-                    row['BMI Category']
-                  ].children.find(
-                    (occupation) =>
-                      occupation.name === row.Occupation,
-                  );
-                  if (!occupationFound) {
-                    occupationFound = {
-                      name: row['Occupation'],
-                      value: 1,
-                    };
-                    bmiCategories[
-                      row['BMI Category']
-                    ].children.push(occupationFound);
-                  } else {
-                    occupationFound.value++;
-                  }
-                });
-        
-                return root;
-              }
-        
-              // Renders the tree visualization using D3
-              function renderTree(data) {
-                const width = 1200;
-                const height = 700;
-                const root = d3.hierarchy(data);
-                const treeLayout = d3
-                  .tree()
-                  .size([height, width - 420]);
-        
-                treeLayout(root);
-        
-                const svg = d3
-                  .select('body')
-                  .append('svg')
-                  .attr('width', width)
-                  .attr('height', height)
-                  .append('g')
-                  .attr('transform', 'translate(40,0)');
-        
-                const tooltip = d3.select('.tooltip');
-        
-                // Drawing links (lines) between nodes
-                svg
-                  .selectAll('.link')
-                  .data(root.links())
-                  .enter()
-                  .append('path')
-                  .attr('class', 'link')
-                  .attr(
-                    'd',
-                    d3
-                      .linkHorizontal()
-                      .x((d) => d.y + 100)
-                      .y((d) => d.x),
-                  )
-                  .style('fill', 'none')
-                  .style('stroke', '#ccc');
-        
-                // Drawing nodes and applying styles based on node type
-                const nodes = svg
-                  .selectAll('.node')
-                  .data(root.descendants())
-                  .enter()
-                  .append('g')
-                  .attr('class', 'node')
-                  .attr(
-                    'transform',
-                    (d) => `translate(${d.y + 100},${d.x})`,
-                  );
-        
-                nodes.each(function (d) {
-                  const node = d3.select(this);
-                  if (d.children) {
-                    node
-                      .append('rect')
-                      .attr('width', 10)
-                      .attr('height', 10)
-                      .attr('x', -5)
-                      .attr('y', -5);
-                  } else {
-                    node.append('circle').attr('r', 5);
-                  }
-        
-                  node
-                    .select('circle, rect')
-                    .style(
-                      'fill',
-                      d.depth === 1
-                        ? '#ff7f0e'
-                        : d.depth === 2
-                          ? '#1f77b4'
-                          : '#2ca02c',
-                    );
-                });
-        
-                // Adding text labels to nodes
-                nodes
-                  .append('text')
-                  .attr('dy', 3)
-                  .attr('x', (d) => (d.children ? -8 : 8))
-                  .style('text-anchor', (d) =>
-                    d.children ? 'end' : 'start',
-                  )
-                  .text(
-                    (d) =>
-                      d.data.name +
-                      (d.data.value ? ` (${d.data.value})` : ''),
-                  )
-                  .style('font-family', 'Poppins')
-                  .style('font-size', '12px');
-        
-                // Tooltip functionality for interactive data display
-                nodes
-                  .on('mouseover', function (event, d) {
-                    tooltip
-                      .transition()
-                      .duration(200)
-                      .style('opacity', 0.9);
-                    tooltip
-                      .html(
-                        `${d.data.name}<br/>${d.data.value ? 'Count Of People: ' + d.data.value : ''}`,
-                      )
-                      .style('left', event.pageX + 'px')
-                      .style('top', event.pageY - 28 + 'px');
-                  })
-                  .on('mouseout', function () {
-                    tooltip
-                      .transition()
-                      .duration(500)
-                      .style('opacity', 0);
-                  });
-        
-                // Adding legend to the visualization
-                const legendData = [
-                  {
-                    shape: 'rect',
-                    color: '#ff7f0e',
-                    label: 'BMI Sub Category',
-                  },
-                  {
-                    shape: 'circle',
-                    color: '#1f77b4',
-                    label: 'Occupation',
-                  },
-                  {
-                    shape: 'rect',
-                    color: '#2ca02c',
-                    label: 'BMI categories',
-                  },
-                ];
-        
-                const legend = svg
-                  .append('g')
-                  .attr('class', 'legend')
-                  .attr(
-                    'transform',
-                    `translate(${width - 170},50)`,
-                  );
-        
-                legend
-                  .selectAll('.legend-item')
-                  .data(legendData)
-                  .enter()
-                  .append('g')
-                  .attr('class', 'legend-item')
-                  .attr(
-                    'transform',
-                    (d, i) => `translate(0, ${i * 25})`,
-                  )
-                  .each(function (d) {
-                    const g = d3.select(this);
-                    if (d.shape === 'rect') {
-                      g.append('rect')
-                        .attr('width', 10)
-                        .attr('height', 10)
-                        .attr('fill', d.color);
-                    } else if (d.shape === 'circle') {
-                      g.append('circle')
-                        .attr('r', 5)
-                        .attr('fill', d.color)
-                        .attr('cx', 5)
-                        .attr('cy', 5);
-                    }
-        
-                    g.append('text')
-                      .attr('x', 20)
-                      .attr('y', 10)
-                      .text(d.label)
-                      .style('font-family', 'Poppins')
-                      .style('font-size', '12px');
-                  });
-              }
-        
-              // Load CSV data and initiate tree rendering
-              d3.csv(
-                'https://gist.githubusercontent.com/Koti2199/3bc3e1ac37db0586f04c04e938378da4/raw/ce50ed006d7a3002fd202adc4e5433cf9273f2e7/Sleep_health_and_lifestyle_dataset_aasignment.csv',
-              ).then(function (data) {
-                const hierarchyData = csvToHierarchy(data);
-                renderTree(hierarchyData);
-              });
-        
-        }
-
-        function drawHeatmap(data) {
-         
-    const variables = ['Age', 'Sleep Duration', 'Physical Activity Level', 'Stress Level', 'Heart Rate', 'Daily Steps'];
-    const matrix = createCorrelationMatrix(data, variables);
-    const svg = d3.select('#heatmap').append('svg')
-                  .attr('width', 1200)
-                  .attr('height', 600) // Increased height to accommodate axis labels
-                  .append('g')
-                  .attr('transform', 'translate(200, 50)');
-
-    const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain([-1, 1]);
-    const xScale = d3.scaleBand().range([0, 400]).domain(variables).padding(0.05);
-    const yScale = d3.scaleBand().range([0, 400]).domain(variables).padding(0.05);
-
-    // Draw the heatmap rectangles
-    svg.selectAll('rect')
-       .data(matrix.flat())
-       .enter()
-       .append('rect')
-       .attr('x', (d, i) => xScale(variables[i % variables.length]))
-       .attr('y', (d, i) => yScale(variables[Math.floor(i / variables.length)]))
-       .attr('width', xScale.bandwidth())
-       .attr('height', yScale.bandwidth())
-       .style('fill', d => colorScale(d));
-
-    // X-Axis and its labels
-    const xAxisGroup = svg.append("g")
-                          .attr("transform", `translate(0,${400})`)
-                          .call(d3.axisBottom(xScale));
-
-    xAxisGroup.selectAll("text")
-              .style("text-anchor", "end")
-              .attr("dx", "-.8em")
-              .attr("dy", ".15em")
-              .attr("transform", "rotate(-65)");
-
-    // Y-Axis and its labels
-    const yAxisGroup = svg.append("g")
-                          .call(d3.axisLeft(yScale));
-
-    // Tooltip (assuming tooltip div exists in the HTML)
-    const tooltip = d3.select('body').append('div')
-                      .attr('class', 'tooltip')
-                      .style('opacity', 0);
-    svg.selectAll('rect')
-       .on('mouseover', (event, d) => {
-           tooltip.transition().duration(200).style('opacity', 1);
-           tooltip.html(`Correlation: ${d.toFixed(2)}`)
-                  .style('left', `${event.pageX + 10}px`)
-                  .style('top', `${event.pageY + 10}px`);
-       })
-       .on('mouseout', () => {
-           tooltip.transition().duration(500).style('opacity', 0);
-       });
-}
-
-        
+      document.addEventListener("DOMContentLoaded", function() {
+            const url = 'https://gist.githubusercontent.com/Koti2199/3bc3e1ac37db0586f04c04e938378da4/raw/ce50ed006d7a3002fd202adc4e5433cf9273f2e7/Sleep_health_and_lifestyle_dataset_aasignment.csv';
+            d3.csv(url).then(data => {
+                const variables = ['Age', 'Sleep Duration', 'Physical Activity Level', 'Stress Level', 'Heart Rate', 'Daily Steps'];
+                const matrix = createCorrelationMatrix(data, variables);
+                drawHeatmap(matrix, variables);
+            });
+        });
 
         function createCorrelationMatrix(data, variables) {
             const matrix = [];
@@ -534,12 +256,96 @@
             const numerator = n * sumXY - sumX * sumY;
             const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
             return denominator ? numerator / denominator : 0;
-           
-           
         }
-        
-      
+
+        function drawHeatmap(matrix, variables) {
+            const margin = {top: 30, right: 120, bottom: 90, left: 110},
+                  width = 700 - margin.left - margin.right,
+                  height = 600 - margin.top - margin.bottom,
+                  svg = d3.select("#heatmap")
+                          .append("svg")
+                          .attr("width", width + margin.left + margin.right)
+                          .attr("height", height + margin.top + margin.bottom)
+                          .append("g")
+                          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const colorScale = d3.scaleSequential(d3.interpolateRdBu)
+                                 .domain([-1, 1]);
+
+            const xScale = d3.scaleBand()
+                             .range([0, width])
+                             .domain(variables)
+                             .padding(0.05);
+
+            const yScale = d3.scaleBand()
+                             .range([0, height])
+                             .domain(variables)
+                             .padding(0.05);
+
+            const tooltip = d3.select("#heatmap").append("div")
+                              .attr("class", "tooltip");
+
+            svg.selectAll()
+               .data(matrix.flat(), (d, i) => i)
+               .enter()
+               .append("rect")
+               .attr("x", (d, i) => xScale(variables[i % variables.length]))
+               .attr("y", (d, i) => yScale(variables[Math.floor(i / variables.length)]))
+               .attr("width", xScale.bandwidth())
+               .attr("height", yScale.bandwidth())
+               .style("fill", d => colorScale(d))
+               .on("mouseover", (event, d) => {
+                   tooltip.style("opacity", 1)
+                          .html(`Correlation Value: ${d.toFixed(2)}`)
+                          .style("left", `${event.pageX}px`)
+                          .style("top", `${event.pageY - 28}px`);
+               })
+               .on("mouseout", () => tooltip.style("opacity", 0));
+
+            // Axis Labels
+            svg.append("g")
+               .attr("transform", `translate(0,${height})`)
+               .call(d3.axisBottom(xScale))
+               .selectAll("text")
+               .style("text-anchor", "end")
+               .attr("dx", "-.8em")
+               .attr("dy", ".15em")
+               .attr("transform", "rotate(-65)");
+
+            svg.append("g")
+               .call(d3.axisLeft(yScale));
+
+            // Legend
+            const legend = svg.append("g")
+                              .attr("transform", `translate(${width + 40}, 0)`);
+
+            const legendScale = d3.scaleLinear()
+                                  .domain([1, -1])
+                                  .range([0, height]);
+
+            const defs = svg.append("defs");
+            const gradient = defs.append("linearGradient")
+                                 .attr("id", "gradient")
+                                 .attr("x1", "0%")
+                                 .attr("x2", "0%")
+                                 .attr("y1", "0%")
+                                 .attr("y2", "100%");
+            gradient.append("stop")
+                    .attr("offset", "0%")
+                    .attr("stop-color", colorScale(1));
+            gradient.append("stop")
+                    .attr("offset", "100%")
+                    .attr("stop-color", colorScale(-1));
+
+            legend.append("rect")
+                  .attr("width", 20)
+                  .attr("height", height)
+                  .style("fill", "url(#gradient)");
+
+            legend.append("g")
+                  .attr("transform", "translate(20,0)")
+                  .call(d3.axisRight(legendScale).ticks(10));
+        }
     </script>
-    
 </body>
 </html>
