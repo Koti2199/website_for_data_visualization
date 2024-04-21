@@ -1,0 +1,95 @@
+/* CSS for body */
+body {
+    /* Setting font family for the entire document */
+    font-family: 'Poppins';
+    /* Setting background color for the entire document */
+    background-color:  #fbeec1;
+  }
+  
+  /* CSS for h1 */
+  h1 {
+    /* Center-aligning text */
+    text-align: center;
+    /* Setting font family for h1 */
+    font-family: 'Poppins';
+    /* Setting text color for h1 */
+    color: black;
+    /* Setting background color for h1 */
+    background-color: #daad86;
+  }
+  
+  /* CSS for links */
+  .links line {
+    /* Setting stroke color for links */
+    stroke: #999;
+    /* Setting stroke opacity for links */
+    stroke-opacity: 0.6;
+  }
+  
+  /* CSS for nodes */
+  .nodes circle {
+    /* Setting stroke color for node circles */
+    stroke: #fff;
+    /* Setting stroke width for node circles */
+    stroke-width: 1.5px;
+  }
+  
+  /* CSS for node text */
+  .nodes text {
+    /* Setting font size for node text */
+    font-size: 12px;
+    /* Setting font family for node text */
+    font-family: poppins;
+    /* Making text non-interactive */
+    pointer-events: none;
+  }
+
+  /* CSS for links */
+  .link {
+    /* Removing fill for links */
+    fill: none;
+    /* Setting stroke color for links */
+    stroke: #555;
+    /* Setting stroke width for links */
+    stroke-width: 2px;
+  }
+  
+  /* CSS for h1 */
+  h3 {
+    /* Center-aligning text */
+    text-align: center;
+    /* Setting font family for h1 */
+    font-family: 'Poppins';
+    /* Setting text color for h1 */
+    color: black;
+    /* Setting background color for h1 */
+    background-color: #daad86;
+  }
+  
+  /* CSS for node circles */
+  .node circle {
+    /* Setting fill color for node circles */
+    fill: #fff;
+    /* Setting stroke color for node circles */
+    stroke: steelblue;
+    /* Setting stroke width for node circles */
+    stroke-width: 3px;
+  }
+  
+  /* CSS for node text */
+  .node text {
+    /* Setting font size and family for node text */
+    font: 14px poppins;
+    /* Translating text slightly upwards for better alignment */
+    transform: translate(0px, -2px);
+  }
+
+  #network {
+    background-color: #97caef; /* Light blue background for the network graph */
+}
+.heatmap {
+    border: 1px solid #ccc;
+    position: relative; /* Allows absolute positioning for the tooltip inside */
+}
+
+ 
